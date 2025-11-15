@@ -1,9 +1,10 @@
-version: '3.8'
 
 services:
-  #1. Nginx pROXY Service
+  #1. Nginx PROXY Service
   proxy:
-    build: ./nginx # Build the Dockerfile in the ./nginx folder
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile # Build the Dockerfile in the ./nginx folder
     ports:
       # Map our host port 8080 to the container's port 80
       - "8080:80"
@@ -14,7 +15,9 @@ services:
   
   #2. The Python Web Service
   web:
-    build: ./web # Build the Dockerfile from the ./web folder
+    build: 
+      context: .
+      dockerfile: ./web/Dockerfile # Build the Dockerfile from the ./web folder
     environment:
       # Map variables from our .env file to what the app.py expects
       - DB_HOST=db
