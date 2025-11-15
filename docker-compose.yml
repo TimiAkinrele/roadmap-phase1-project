@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  #1. Nginx pROXY Service
+  proxy:
+    build: ./nginx # Build the Dockerfile in the ./nginx folder
+    ports:
+      # Map our host port 8080 to the container's port 80
+      - "8080:80"
+    depends_on:
+      - web # Don't start until the 'web' service is healthy
+    networks:
+      - app-net # Connect to our custom private network
+  
+  #2. The Python Web Service
+  web:
+    build: ./web # Build the Dockerfile from the ./web folder
+    environment:
+      # Map variables from our .env file to what the app.py expects
+      - DB_HOST=db
+      - DB_NAME=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      - db # Don't start until the 'db' service is healthy
+    
+    #This tells Docker Compose to start 3 replicas for high availabiltity
+    # Of this 'web' service, enabling horizontal scaling for load balancing
+    deploy:
+      replicas: 3
+    networks:
+      - app-net # Connect to our custom private network 
+
+    
+
+  #3. The PostgreSQL DB Service
+  db:
+    image: postgres:15-alpine # Pull a pre-built image
+    env_file: .env # Load the .env file for secrets
+    volumes:
+      - db_data:/var/lib/postgresql/data # Use a named volume for persistent data
+    networks:
+      - app-net # Connect to our custom private network
+    # NO "ports" section because it's private
+
+# Define our custom network and volume
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  db_data:
+
