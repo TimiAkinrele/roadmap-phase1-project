@@ -2,7 +2,8 @@ import os
 import time
 import psycopg2
 from flask import Flask, jsonify, request
-app = Flask|(__name__)
+
+app = Flask(__name__)
 
 def get_db_connection():
     retries = 10
@@ -23,15 +24,17 @@ def get_db_connection():
     print("Could not connect to database after retries.")
     return None
 
-@app.before_first_request
 def setup_db():
-    conn = get_db.connection()
+    conn = get_db_connection()
     if conn:
-            with conn.cursor() as cur:
-                cur.execute("CREATE TABLE IF NOT EXISTS votes (id SERIAL PRIMARY KEY, choice TEXT NOT NULL);")
-            conn.commit()
-            conn.close()
-            print("Table 'votes' checked/created.")
+        with conn.cursor() as cur:
+            # Run this command once to ensure the table exists
+            cur.execute("CREATE TABLE IF NOT EXISTS votes (id SERIAL PRIMARY KEY, choice TEXT NOT NULL);")
+        conn.commit()
+        conn.close()
+        print("Database initialised, 'votes' table checked/created.")
+    else:
+        print("FATAL: Could not connect to database to initialise.")
 
 @app.route('/api/vote', methods=['POST'])
 def vote():
@@ -65,4 +68,5 @@ def results():
         return jsonify(results_dict)
 
 if __name__ == "__main__":
+        setup_db()
         app.run(host='0.0.0.0', port=5000)
