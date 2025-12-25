@@ -1,9 +1,9 @@
 import os
 import time
 import psycopg2
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder = 'static')
 
 def get_db_connection():
     retries = 10
@@ -12,14 +12,14 @@ def get_db_connection():
             conn = psycopg2.connect(
                 host=os.environ.get('DB_HOST'),
                 database=os.environ.get('DB_NAME'),
-                user=os.environ.get('POSTGRES_USER'),
-                password=os.environ.get('POSTGRES_PASSWORD')
+                user=os.environ.get('DB_USER'),
+                password=os.environ.get('DB_PASSWORD')
             )
             print("Database connection successful!")
             return conn
         except psycopg2.OperationalError:
             print("Database connection failed, retrying...")
-            retires -=1
+            retries -=1
             time.sleep(3)
     print("Could not connect to database after retries.")
     return None
@@ -35,6 +35,10 @@ def setup_db():
         print("Database initialised, 'votes' table checked/created.")
     else:
         print("FATAL: Could not connect to database to initialise.")
+
+@app.route('/')
+def index():
+    return send_from_directory('static', 'index.html')
 
 @app.route('/api/vote', methods=['POST'])
 def vote():
