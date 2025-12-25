@@ -17,8 +17,9 @@ def get_db_connection():
             )
             print("Database connection successful!")
             return conn
-        except psycopg2.OperationalError:
-            print("Database connection failed, retrying...")
+        except psycopg2.OperationalError as e:
+            print(f"Database connection failed: {e}")
+            print("Retrying...")
             retries -=1
             time.sleep(3)
     print("Could not connect to database after retries.")
